@@ -8,6 +8,7 @@ TD3 implementation for thrust vector control systems.
 
 from .rocket_physics import RocketTVCEnvironment, RocketDynamics
 from .td3_networks import TD3Agent, ActorNetwork, CriticNetwork, ModelOptimizer
+from .replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
 
 __version__ = "1.0.0"
 __author__ = "AI Assistant"
@@ -18,5 +19,7 @@ __all__ = [
     'TD3Agent',
     'ActorNetwork',
     'CriticNetwork',
-    'ModelOptimizer'
+    'ModelOptimizer',
+    'ReplayBuffer',
+    'PrioritizedReplayBuffer'
 ]
