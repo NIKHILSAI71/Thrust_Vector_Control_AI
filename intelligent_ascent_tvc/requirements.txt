@@ -1,0 +1,44 @@
+# Core ML and RL Libraries
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.21.0
+gymnasium>=0.29.0
+stable-baselines3>=2.0.0
+sb3-contrib>=2.0.0
+
+# Physics Simulation
+pybullet>=3.2.5
+scipy>=1.9.0
+
+# Configuration and Data Handling
+PyYAML>=6.0
+pandas>=1.5.0
+h5py>=3.7.0
+
+# Visualization and Plotting
+matplotlib>=3.6.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Model Optimization and Deployment
+onnx>=1.14.0
+onnxruntime>=1.15.0
+tensorflow>=2.13.0
+tf2onnx>=1.14.0
+
+# Utilities
+tqdm>=4.64.0
+colorama>=0.4.6
+psutil>=5.9.0
+opencv-python>=4.8.0
+
+# Development and Testing
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+jupyter>=1.0.0
+
+# Optional: Hardware interface (uncomment if using real hardware)
+# pyserial>=3.5
+# RPi.GPIO>=0.7.1  # For Raspberry Pi
+# adafruit-circuitpython-busdevice>=5.2.0  # For microcontroller I2C/SPI

@@ -1,0 +1,116 @@
+# Physical parameters of the rocket and simulation environment
+
+world_params:
+  gravity: 9.81  # m/s²
+  air_density_sl: 1.225  # kg/m³ at sea level
+  wind_enabled: true
+  wind_base_velocity: [0.0, 2.0, 0.0]  # [x, y, z] in m/s
+  wind_gust_probability: 0.1  # Probability of wind gusts per simulation step
+  wind_gust_magnitude: 5.0  # Maximum gust velocity in m/s
+  air_density_model: "standard_atmosphere"  # or "constant"
+
+rocket_params:
+  # Mass properties
+  dry_mass: 1.5  # kg - rocket without propellant
+  propellant_mass: 0.5  # kg - total propellant mass
+  
+  # Geometric properties
+  body_length: 1.0  # m - total rocket length
+  body_diameter: 0.05  # m - main body diameter
+  nose_cone_length: 0.15  # m
+  fin_span: 0.08  # m - fin span from body centerline
+  fin_root_chord: 0.12  # m
+  fin_tip_chord: 0.06  # m
+  
+  # Aerodynamic properties
+  drag_coefficient: 0.75  # Dimensionless Cd
+  normal_force_coefficient: 2.0  # CNα - normal force coefficient derivative
+  center_of_pressure_offset: 0.3  # m from nose cone tip
+  
+  # Initial conditions
+  initial_position: [0.0, 0.0, 0.1]  # [x, y, z] in meters
+  initial_orientation: [0.0, 0.0, 0.0]  # [roll, pitch, yaw] in radians
+  initial_velocity: [0.0, 0.0, 0.0]  # [vx, vy, vz] in m/s
+  initial_angular_velocity: [0.0, 0.0, 0.0]  # [ωx, ωy, ωz] in rad/s
+
+engine_params:
+  # Thrust curve data
+  thrust_curve_file: 'data/thrust_curves/C6-3.csv'
+  total_impulse: 8.8  # N⋅s - total impulse of the motor
+  burn_time: 1.7  # seconds - total burn duration
+  
+  # TVC system parameters
+  gimbal_limit_deg: 7.0  # Maximum gimbal deflection in degrees
+  gimbal_rate_limit_deg_s: 180.0  # Maximum gimbal rate in degrees/second
+  gimbal_pivot_offset: -0.05  # m - gimbal pivot position relative to rocket base
+  
+  # Engine mounting
+  engine_length: 0.07  # m
+  engine_diameter: 0.024  # m
+  nozzle_exit_diameter: 0.013  # m
+  
+  # Performance characteristics
+  specific_impulse: 80.0  # seconds - Isp of the motor
+  chamber_pressure: 7.0e5  # Pa - chamber pressure
+  nozzle_efficiency: 0.95  # Nozzle efficiency factor
+
+simulation_params:
+  # Timing
+  sim_time_step: 0.001  # seconds - physics timestep (1 kHz)
+  control_frequency: 200.0  # Hz - AI control update rate
+  max_simulation_time: 30.0  # seconds - maximum episode duration
+  
+  # Episode termination conditions
+  max_altitude: 1000.0  # m - terminate if exceeded
+  max_attitude_error: 45.0  # degrees - terminate if roll/pitch exceeds this
+  max_angular_rate: 10.0  # rad/s - terminate if angular velocity exceeds this
+  ground_collision_threshold: 0.0  # m - altitude below which episode terminates
+  
+  # Sensor modeling
+  imu_noise_enabled: true
+  accelerometer_noise_std: 0.1  # m/s² - standard deviation of accelerometer noise
+  gyroscope_noise_std: 0.01  # rad/s - standard deviation of gyroscope noise
+  magnetometer_noise_std: 0.1  # μT - standard deviation of magnetometer noise
+  gps_enabled: false  # GPS simulation (not typically used for model rockets)
+  
+  # Physics fidelity
+  use_aerodynamic_heating: false  # Enable aerodynamic heating effects
+  use_magnus_effect: false  # Enable Magnus effect from rocket spin
+  use_ground_effect: true  # Enable ground effect near launch
+  
+# Disturbance modeling for robust training
+disturbances:
+  mass_uncertainty: 0.05  # ±5% mass variation
+  thrust_uncertainty: 0.1  # ±10% thrust variation
+  aerodynamic_uncertainty: 0.15  # ±15% aerodynamic coefficient variation
+  center_of_mass_uncertainty: 0.02  # ±2cm CG uncertainty
+  moment_of_inertia_uncertainty: 0.1  # ±10% MOI uncertainty
+  
+# Multi-scenario training environments
+scenarios:
+  nominal_launch:
+    wind_velocity: [0.0, 1.0, 0.0]
+    mass_factor: 1.0
+    thrust_factor: 1.0
+    
+  windy_conditions:
+    wind_velocity: [2.0, 5.0, 1.0]
+    wind_gust_probability: 0.2
+    mass_factor: 1.0
+    thrust_factor: 1.0
+    
+  low_thrust:
+    wind_velocity: [0.0, 1.0, 0.0]
+    mass_factor: 1.0
+    thrust_factor: 0.8
+    
+  heavy_rocket:
+    wind_velocity: [0.0, 1.0, 0.0]
+    mass_factor: 1.2
+    thrust_factor: 1.0
+    
+  emergency_recovery:
+    wind_velocity: [3.0, 8.0, 2.0]
+    mass_factor: 0.9  # Simulate propellant consumption
+    thrust_factor: 0.7  # Simulate engine underperformance
+    initial_attitude_error: 15.0  # degrees - start with attitude disturbance

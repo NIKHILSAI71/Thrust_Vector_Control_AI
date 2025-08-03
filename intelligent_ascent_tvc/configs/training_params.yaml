@@ -1,0 +1,167 @@
+# Training hyperparameters for the TD3 algorithm
+
+algorithm:
+  name: "TD3"  # Twin Delayed Deep Deterministic Policy Gradient
+  
+training_params:
+  # Learning rates
+  learning_rate_actor: 1e-4
+  learning_rate_critic: 1e-3
+  
+  # Training schedule
+  total_timesteps: 2000000  # Total training steps
+  batch_size: 256
+  learning_starts: 25000  # Steps before learning starts
+  
+  # Experience replay
+  buffer_size: 1000000  # Replay buffer size
+  
+  # TD3 specific parameters
+  policy_delay: 2  # Delay policy updates (update every 2 critic updates)
+  target_policy_noise: 0.2  # Noise added to target policy during critic update
+  target_noise_clip: 0.5  # Range to clip target policy noise
+  tau: 0.005  # Soft update coefficient for target networks
+  gamma: 0.99  # Discount factor
+  
+  # Exploration
+  exploration_noise: 0.1  # Gaussian noise std for exploration
+  exploration_noise_decay: 0.995  # Decay factor for exploration noise
+  min_exploration_noise: 0.01  # Minimum exploration noise
+  
+  # Action noise for training robustness
+  action_noise_std: 0.05  # Standard deviation of action noise during training
+
+network_architecture:
+  # Actor network (policy)
+  actor_hidden_layers: [256, 128, 64]
+  actor_activation: "relu"
+  actor_output_activation: "tanh"
+  actor_lr_schedule: "constant"  # or "linear", "exponential"
+  
+  # Critic network (Q-function)
+  critic_hidden_layers: [256, 128, 64]
+  critic_activation: "relu"
+  critic_lr_schedule: "constant"
+  
+  # Network initialization
+  weight_init: "xavier_uniform"
+  bias_init: "zeros"
+  
+  # Dropout and regularization
+  dropout_rate: 0.0  # Dropout during training (0.0 = no dropout)
+  l2_regularization: 0.0  # L2 weight decay
+  
+  # Batch normalization
+  use_batch_norm: false  # Enable batch normalization
+  
+evaluation:
+  # Evaluation schedule
+  eval_freq: 10000  # Evaluate every N training steps
+  n_eval_episodes: 10  # Number of episodes for evaluation
+  eval_deterministic: true  # Use deterministic policy for evaluation
+  
+  # Performance metrics
+  success_threshold:
+    max_attitude_error: 5.0  # degrees
+    max_angular_rate: 2.0  # rad/s
+    fuel_efficiency: 0.8  # Minimum fuel efficiency (0-1)
+    
+logging:
+  # Tensorboard logging
+  tensorboard_log: "./results/tensorboard_logs/"
+  log_freq: 1000  # Log training metrics every N steps
+  
+  # Model checkpointing
+  save_freq: 50000  # Save model every N steps
+  save_replay_buffer: false  # Save replay buffer with model
+  
+  # Verbose output
+  verbose: 1  # 0: no output, 1: info, 2: debug
+
+curriculum_learning:
+  enabled: true
+  stages:
+    stage_1:
+      timesteps: 500000
+      scenarios: ["nominal_launch"]
+      reward_weights:
+        attitude_stability: 1.0
+        angular_stability: 1.0
+        control_effort: 0.1
+        
+    stage_2:
+      timesteps: 750000
+      scenarios: ["nominal_launch", "windy_conditions"]
+      reward_weights:
+        attitude_stability: 1.0
+        angular_stability: 1.0
+        control_effort: 0.2
+        trajectory_following: 0.5
+        
+    stage_3:
+      timesteps: 500000
+      scenarios: ["windy_conditions", "low_thrust", "heavy_rocket"]
+      reward_weights:
+        attitude_stability: 1.0
+        angular_stability: 1.0
+        control_effort: 0.3
+        trajectory_following: 1.0
+        fuel_efficiency: 0.2
+        
+    stage_4:
+      timesteps: 250000
+      scenarios: ["emergency_recovery"]
+      reward_weights:
+        attitude_stability: 2.0
+        angular_stability: 2.0
+        control_effort: 0.1
+        safety: 1.0
+
+optimization:
+  # Model optimization for deployment
+  quantization:
+    enabled: true
+    method: "dynamic"  # or "static", "qat" (quantization-aware training)
+    target_dtype: "int8"
+    calibration_dataset_size: 1000
+    
+  # ONNX export settings
+  onnx_export:
+    enabled: true
+    opset_version: 11
+    export_path: "./models/onnx/"
+    dynamic_axes: true
+    
+  # TensorFlow Lite conversion
+  tflite_conversion:
+    enabled: true
+    optimization: ["DEFAULT", "OPTIMIZE_FOR_SIZE", "OPTIMIZE_FOR_LATENCY"]
+    target_spec: "int8"
+    representative_dataset_size: 500
+    export_path: "./models/tflite/"
+
+# Environment-specific training settings
+environment_settings:
+  # Parallel environments for faster training
+  n_envs: 1  # Number of parallel environments (increase for faster training)
+  
+  # Environment reset conditions
+  random_reset: true  # Randomize initial conditions
+  reset_on_episode_end: true
+  
+  # Scenario sampling during training
+  scenario_sampling:
+    method: "uniform"  # or "weighted", "curriculum"
+    weights:
+      nominal_launch: 0.3
+      windy_conditions: 0.3
+      low_thrust: 0.2
+      heavy_rocket: 0.1
+      emergency_recovery: 0.1
+
+# Hardware-specific settings for deployment optimization
+deployment:
+  target_platform: "arm_cortex_m"  # or "esp32", "raspberry_pi", "generic"
+  inference_time_target_ms: 5.0  # Target inference time in milliseconds
+  memory_constraint_kb: 512  # Available memory for model in kilobytes
+  compute_precision: "int8"  # Computation precision for embedded deployment
