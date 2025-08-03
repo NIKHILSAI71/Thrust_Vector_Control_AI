@@ -75,6 +75,11 @@ class ActorNetwork(nn.Module):
     def get_action(self, state: np.ndarray, noise_scale: float = 0.0) -> np.ndarray:
         """Get action from state with optional exploration noise."""
         state_tensor = torch.FloatTensor(state).unsqueeze(0)
+        
+        # Move tensor to the same device as the model
+        device = next(self.parameters()).device
+        state_tensor = state_tensor.to(device)
+        
         action = self.forward(state_tensor).detach().cpu().numpy()[0]
         
         if noise_scale > 0:
