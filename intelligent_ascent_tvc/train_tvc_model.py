@@ -107,6 +107,11 @@ class TrainingManager:
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load training configuration from YAML file."""
         try:
+            # Make path relative to script directory if not absolute
+            if not os.path.isabs(config_path):
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                config_path = os.path.join(script_dir, config_path)
+            
             with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)
             logger.info(f"Configuration loaded from {config_path}")
