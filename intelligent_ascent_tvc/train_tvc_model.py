@@ -186,6 +186,11 @@ class TrainingManager:
                     episode_time = time.time() - episode_start_time
                     self._record_episode(episode_reward, episode_timesteps, episode_time, info)
                     
+                    # Log episode completion periodically
+                    if self.episode_num % 50 == 0:
+                        logger.info(f"Episode {self.episode_num} completed: Reward={episode_reward:.2f}, "
+                                  f"Steps={episode_timesteps}, Altitude={info.get('altitude', 0):.1f}m")
+                    
                     # Reset environment
                     state, _ = self.env.reset()
                     episode_reward = 0
@@ -217,11 +222,15 @@ class TrainingManager:
                 
                 # Update progress bar
                 pbar.update(1)
+                
+                # Format reward safely
+                reward_str = f"{episode_reward:.1f}" if not np.isnan(episode_reward) and not np.isinf(episode_reward) else "N/A"
+                
                 pbar.set_postfix({
-                    'Episode': self.episode_num,
-                    'Reward': f"{episode_reward:.1f}",
+                    'Ep': self.episode_num,
+                    'R': reward_str,
                     'Noise': f"{self.exploration_noise:.3f}",
-                    'Buffer': f"{len(self.replay_buffer):,}"
+                    'Buf': f"{len(self.replay_buffer)//1000}k"
                 })
         
         # Final evaluation and save
