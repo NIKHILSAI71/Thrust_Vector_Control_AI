@@ -74,19 +74,28 @@ class ActorNetwork(nn.Module):
     
     def get_action(self, state: np.ndarray, noise_scale: float = 0.0) -> np.ndarray:
         """Get action from state with optional exploration noise."""
-        state_tensor = torch.FloatTensor(state).unsqueeze(0)
+        # Set to evaluation mode for inference
+        was_training = self.training
+        self.eval()
         
-        # Move tensor to the same device as the model
-        device = next(self.parameters()).device
-        state_tensor = state_tensor.to(device)
-        
-        action = self.forward(state_tensor).detach().cpu().numpy()[0]
-        
-        if noise_scale > 0:
-            noise = np.random.normal(0, noise_scale, size=action.shape)
-            action = np.clip(action + noise, -self.max_action, self.max_action)
-        
-        return action
+        try:
+            state_tensor = torch.FloatTensor(state).unsqueeze(0)
+            
+            # Move tensor to the same device as the model
+            device = next(self.parameters()).device
+            state_tensor = state_tensor.to(device)
+            
+            with torch.no_grad():
+                action = self.forward(state_tensor).detach().cpu().numpy()[0]
+            
+            if noise_scale > 0:
+                noise = np.random.normal(0, noise_scale, size=action.shape)
+                action = np.clip(action + noise, -self.max_action, self.max_action)
+            
+            return action
+        finally:
+            # Restore original training mode
+            self.train(was_training)
 
 
 class CriticNetwork(nn.Module):
