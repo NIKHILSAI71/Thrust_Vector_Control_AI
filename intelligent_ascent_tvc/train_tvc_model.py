@@ -69,18 +69,18 @@ class TrainingManager:
             state_dim=self.state_dim,
             action_dim=self.action_dim,
             max_action=self.max_action,
-            lr_actor=self.training_params['learning_rate_actor'],
-            lr_critic=self.training_params['learning_rate_critic'],
-            gamma=self.training_params['gamma'],
-            tau=self.training_params['tau'],
-            policy_noise=self.training_params['target_policy_noise'],
-            noise_clip=self.training_params['target_noise_clip'],
-            policy_freq=self.training_params['policy_delay']
+            lr_actor=float(self.training_params['learning_rate_actor']),
+            lr_critic=float(self.training_params['learning_rate_critic']),
+            gamma=float(self.training_params['gamma']),
+            tau=float(self.training_params['tau']),
+            policy_noise=float(self.training_params['target_policy_noise']),
+            noise_clip=float(self.training_params['target_noise_clip']),
+            policy_freq=int(self.training_params['policy_delay'])
         )
         
         # Initialize replay buffer
         self.replay_buffer = ReplayBuffer(
-            capacity=self.training_params['buffer_size'],
+            capacity=int(self.training_params['buffer_size']),
             state_dim=self.state_dim,
             action_dim=self.action_dim
         )
@@ -92,9 +92,9 @@ class TrainingManager:
         self.evaluation_history = []
         
         # Exploration noise schedule
-        self.exploration_noise = self.training_params['exploration_noise']
-        self.noise_decay = self.training_params['exploration_noise_decay']
-        self.min_noise = self.training_params['min_exploration_noise']
+        self.exploration_noise = float(self.training_params['exploration_noise'])
+        self.noise_decay = float(self.training_params['exploration_noise_decay'])
+        self.min_noise = float(self.training_params['min_exploration_noise'])
         
         # Create output directories
         self._create_directories()
@@ -145,10 +145,10 @@ class TrainingManager:
         episode_timesteps = 0
         episode_start_time = time.time()
         
-        with tqdm(total=self.training_params['total_timesteps'], desc="Training") as pbar:
-            while self.total_timesteps < self.training_params['total_timesteps']:
+        with tqdm(total=int(self.training_params['total_timesteps']), desc="Training") as pbar:
+            while self.total_timesteps < int(self.training_params['total_timesteps']):
                 # Select action with exploration noise
-                if self.total_timesteps < self.training_params['learning_starts']:
+                if self.total_timesteps < int(self.training_params['learning_starts']):
                     # Random actions during initial exploration
                     action = self.env.action_space.sample()
                 else:
@@ -168,16 +168,16 @@ class TrainingManager:
                 self.total_timesteps += 1
                 
                 # Train agent
-                if (self.total_timesteps >= self.training_params['learning_starts'] and
-                    self.replay_buffer.can_sample(self.training_params['batch_size'])):
+                if (self.total_timesteps >= int(self.training_params['learning_starts']) and
+                    self.replay_buffer.can_sample(int(self.training_params['batch_size']))):
                     
                     training_metrics = self.agent.train(
                         self.replay_buffer, 
-                        self.training_params['batch_size']
+                        int(self.training_params['batch_size'])
                     )
                     
                     # Log training metrics
-                    if self.total_timesteps % self.log_params['log_freq'] == 0:
+                    if self.total_timesteps % int(self.log_params['log_freq']) == 0:
                         self._log_training_metrics(training_metrics)
                 
                 # Episode end
@@ -200,7 +200,7 @@ class TrainingManager:
                     )
                 
                 # Evaluation
-                if self.total_timesteps % self.eval_params['eval_freq'] == 0:
+                if self.total_timesteps % int(self.eval_params['eval_freq']) == 0:
                     eval_metrics = self._evaluate()
                     self.evaluation_history.append({
                         'timestep': self.total_timesteps,
@@ -212,7 +212,7 @@ class TrainingManager:
                               f"Success rate: {eval_metrics['success_rate']:.2f}")
                 
                 # Save model checkpoint
-                if self.total_timesteps % self.log_params['save_freq'] == 0:
+                if self.total_timesteps % int(self.log_params['save_freq']) == 0:
                     self._save_checkpoint()
                 
                 # Update progress bar
@@ -266,7 +266,7 @@ class TrainingManager:
         eval_rewards = []
         success_count = 0
         
-        for _ in range(self.eval_params['n_eval_episodes']):
+        for _ in range(int(self.eval_params['n_eval_episodes'])):
             state, _ = self.eval_env.reset()
             episode_reward = 0
             done = False
@@ -282,8 +282,8 @@ class TrainingManager:
             
             # Success criteria (based on final state)
             if (info['altitude'] > 50 and  # Minimum altitude achieved
-                info['attitude_error'] < np.radians(self.eval_params['success_threshold']['max_attitude_error']) and
-                info['angular_rate'] < self.eval_params['success_threshold']['max_angular_rate']):
+                info['attitude_error'] < np.radians(float(self.eval_params['success_threshold']['max_attitude_error'])) and
+                info['angular_rate'] < float(self.eval_params['success_threshold']['max_angular_rate'])):
                 success_count += 1
         
         metrics = {
@@ -291,7 +291,7 @@ class TrainingManager:
             'std_reward': np.std(eval_rewards),
             'min_reward': np.min(eval_rewards),
             'max_reward': np.max(eval_rewards),
-            'success_rate': success_count / self.eval_params['n_eval_episodes']
+            'success_rate': success_count / int(self.eval_params['n_eval_episodes'])
         }
         
         return metrics
