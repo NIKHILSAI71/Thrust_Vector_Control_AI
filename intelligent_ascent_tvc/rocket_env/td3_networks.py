@@ -225,8 +225,8 @@ class TD3Agent:
         state = torch.FloatTensor(batch['state']).to(self.device)
         action = torch.FloatTensor(batch['action']).to(self.device)
         next_state = torch.FloatTensor(batch['next_state']).to(self.device)
-        reward = torch.FloatTensor(batch['reward']).to(self.device)
-        done = torch.BoolTensor(batch['done']).to(self.device)
+        reward = torch.FloatTensor(batch['reward']).to(self.device).unsqueeze(1)
+        done = torch.BoolTensor(batch['done']).to(self.device).unsqueeze(1)
         
         # Compute target Q-values
         with torch.no_grad():
